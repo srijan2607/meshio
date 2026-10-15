@@ -52,6 +52,8 @@ def read_buffer(f):
             pass
         elif split[0] == "f":
             dat = [int(item.split("/")[0]) for item in split[1:]]
+            # Negative OBJ indices refer to vertices defined before this face.
+            dat = [idx - 1 if idx >= 0 else len(points) + idx for idx in dat]
             if len(face_groups) == 0 or (
                 len(face_groups[-1]) > 0 and len(face_groups[-1][-1]) != len(dat)
             ):
@@ -89,11 +91,11 @@ def read_buffer(f):
     cells = []
     for f, gid in zip(face_groups, face_group_ids):
         if f.shape[1] == 3:
-            cells.append(CellBlock("triangle", f - 1))
+            cells.append(CellBlock("triangle", f))
         elif f.shape[1] == 4:
-            cells.append(CellBlock("quad", f - 1))
+            cells.append(CellBlock("quad", f))
         else:
-            cells.append(CellBlock("polygon", f - 1))
+            cells.append(CellBlock("polygon", f))
         cell_data["obj:group_ids"].append(gid)
 
     return Mesh(points, cells, point_data=point_data, cell_data=cell_data)
